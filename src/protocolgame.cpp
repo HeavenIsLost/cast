@@ -432,7 +432,7 @@ void ProtocolGame::disconnect() const
 	}
 }
 
-void ProtocolGame::writeToOutputBuffer(const NetworkMessage& msg)
+void ProtocolGame::writeToOutputBuffer(const NetworkMessage& msg, bool broadcast /*= true*/)
 {
 	OutputMessage_ptr out = getOutputBuffer(msg.getLength());
 	if (out) {
@@ -2240,14 +2240,14 @@ void ProtocolGame::sendPing()
 {
 	NetworkMessage msg;
 	msg.addByte(0x1D);
-	writeToOutputBuffer(msg);
+	writeToOutputBuffer(msg, false);
 }
 
 void ProtocolGame::sendPingBack()
 {
 	NetworkMessage msg;
 	msg.addByte(0x1E);
-	writeToOutputBuffer(msg);
+	writeToOutputBuffer(msg, false);
 }
 
 void ProtocolGame::sendDistanceShoot(const Position& from, const Position& to, uint8_t type)

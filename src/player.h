@@ -36,6 +36,7 @@
 #include "groups.h"
 #include "town.h"
 #include "mounts.h"
+#include "protocolcaster.h"
 
 class House;
 class NetworkMessage;
@@ -1141,6 +1142,21 @@ class Player final : public Creature, public Cylinder
 		void forgetInstantSpell(const std::string& name);
 		bool hasLearnedInstantSpell(const std::string& name) const;
 
+		const std::map<uint8_t, OpenContainer>& getOpenContainers() const {
+			return openContainers;
+		}
+
+		bool startLiveCast(const std::string& password) {
+			return client != nullptr && static_cast<ProtocolCaster*>(client)->startLiveCast(password);
+		}
+
+		bool stopLiveCast() {
+			return client != nullptr && static_cast<ProtocolCaster*>(client)->stopLiveCast();
+		}
+
+		bool isLiveCaster() const {
+			return client != nullptr && static_cast<ProtocolCaster*>(client)->isLiveCaster();
+		}
 	protected:
 		std::forward_list<Condition*> getMuteConditions() const;
 
@@ -1346,6 +1362,7 @@ class Player final : public Creature, public Cylinder
 		friend class Actions;
 		friend class IOLoginData;
 		friend class ProtocolGame;
+		friend class ProtocolCaster;
 };
 
 #endif

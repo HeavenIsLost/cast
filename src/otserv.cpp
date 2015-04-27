@@ -37,10 +37,12 @@
 #include "scriptmanager.h"
 #include "tools.h"
 #include "rsa.h"
+#include "protocolcaster.h"
 #include "protocolgame.h"
 #include "protocolold.h"
 #include "protocollogin.h"
 #include "protocolstatus.h"
+#include "protocolspectator.h"
 #include "house.h"
 #include "databasemanager.h"
 #include "scheduler.h"
@@ -275,8 +277,12 @@ void mainLoader(int, char*[], ServiceManager* services)
 	g_game.setGameState(GAME_STATE_INIT);
 
 	// Game client protocols
-	services->add<ProtocolGame>(g_config.getNumber(ConfigManager::GAME_PORT));
+	services->add<ProtocolCaster>(g_config.getNumber(ConfigManager::GAME_PORT));
 	services->add<ProtocolLogin>(g_config.getNumber(ConfigManager::LOGIN_PORT));
+
+	//Casting
+	ProtocolCaster::clearLiveCastInfo();
+	services->add<ProtocolSpectator>(g_config.getNumber(ConfigManager::LIVE_CAST_PORT));
 
 	// OT protocols
 	services->add<ProtocolStatus>(g_config.getNumber(ConfigManager::STATUS_PORT));
