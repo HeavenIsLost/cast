@@ -208,7 +208,7 @@ void ProtocolSpectator::login(const std::string& liveCastName, const std::string
 
 	const auto& liveCastPassword = liveCasterProtocol->getLiveCastPassword();
 	if (liveCasterProtocol->isLiveCaster()) {
-		if (!password.empty() && password != liveCastPassword) {
+		if (!liveCastPassword.empty() && password != liveCastPassword) {
 			disconnectSpectator("Wrong live cast password.");
 			return;
 		}

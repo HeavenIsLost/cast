@@ -118,7 +118,9 @@ void ProtocolLogin::getCastingStreamsList(const std::string& password, uint16_t 
 				castList.push_back(std::make_pair(cast.second->getSpectatorCount(), cast.first->getName()));
 			}
 		} else {
-			castList.push_back(std::make_pair(cast.second->getSpectatorCount(), cast.first->getName()));
+			if (!cast.second->isPasswordProtected()) {
+				castList.push_back(std::make_pair(cast.second->getSpectatorCount(), cast.first->getName()));
+			}
 		}
 	}
 

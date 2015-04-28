@@ -52,7 +52,6 @@ ProtocolCaster::ProtocolCaster(Connection_ptr connection):
 	ProtocolGame(connection),
 	m_isLiveCaster(false)
 {
-	std::cout << "New connection" << std::endl;
 }
 
 void ProtocolCaster::releaseProtocol()
