@@ -40,6 +40,14 @@ class ProtocolSpectator : public ProtocolGame
 			return spectatorName;
 		}
 
+		void setSpectatorId(uint32_t id) {
+			spectatorId = id;
+		}
+
+		const uint32_t getSpectatorId() {
+			return spectatorId;
+		}
+
 		void setPlayer(Player* p) override;
 
 	private:
@@ -47,6 +55,7 @@ class ProtocolSpectator : public ProtocolGame
 		ProtocolCaster* client;
 		OperatingSystem_t operatingSystem;
 		std::string spectatorName;
+		uint32_t spectatorId;
 
 		void login(const std::string& liveCastName, const std::string& password);
 		void logout();

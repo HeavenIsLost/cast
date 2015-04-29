@@ -1347,7 +1347,7 @@ void ProtocolGame::sendBasicData()
 	writeToOutputBuffer(msg);
 }
 
-void ProtocolGame::sendTextMessage(const TextMessage& message)
+void ProtocolGame::sendTextMessage(const TextMessage& message, bool broadcast)
 {
 	NetworkMessage msg;
 	msg.addByte(0xB4);
@@ -1377,7 +1377,7 @@ void ProtocolGame::sendTextMessage(const TextMessage& message)
 		}
 	}
 	msg.addString(message.text);
-	writeToOutputBuffer(msg);
+	writeToOutputBuffer(msg, broadcast);
 }
 
 void ProtocolGame::sendClosePrivate(uint16_t channelId)
@@ -1443,7 +1443,7 @@ void ProtocolGame::sendChannel(uint16_t channelId, const std::string& channelNam
 	writeToOutputBuffer(msg);
 }
 
-void ProtocolGame::sendChannelMessage(const std::string& author, const std::string& text, SpeakClasses type, uint16_t channel)
+void ProtocolGame::sendChannelMessage(const std::string& author, const std::string& text, SpeakClasses type, uint16_t channel, bool broadcast)
 {
 	NetworkMessage msg;
 	msg.addByte(0xAA);
@@ -1453,7 +1453,7 @@ void ProtocolGame::sendChannelMessage(const std::string& author, const std::stri
 	msg.addByte(type);
 	msg.add<uint16_t>(channel);
 	msg.addString(text);
-	writeToOutputBuffer(msg);
+	writeToOutputBuffer(msg, broadcast);
 }
 
 void ProtocolGame::sendIcons(uint16_t icons)

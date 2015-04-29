@@ -213,6 +213,11 @@ void ProtocolSpectator::login(const std::string& liveCastName, const std::string
 			return;
 		}
 
+		if (liveCasterProtocol->isIpBan(getIP())) {
+			disconnectSpectator("You have been banned from this cast.");
+			return;
+		}
+
 		player = _player;
 		eventConnect = 0;
 		client = liveCasterProtocol;
@@ -298,6 +303,10 @@ void ProtocolSpectator::parseSpectatorSay(NetworkMessage& msg)
 	}
 
 	if (client) {
+		if (client->isSpectatorMuted(spectatorId)) {
+			sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "You have been muted."));
+			return;
+		}
 		g_dispatcher.addTask(createTask(std::bind(&ProtocolCaster::broadcastSpectatorMessage, client, spectatorName, text)));
 	}
 }

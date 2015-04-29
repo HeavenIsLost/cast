@@ -21,6 +21,7 @@
 #define FS_ProtocolCaster_H
 
 #include "protocolgame.h"
+#include "protocolspectator.h"
 
 class ProtocolCaster : public ProtocolGame
 {
@@ -126,8 +127,18 @@ class ProtocolCaster : public ProtocolGame
 		}
 
 		static uint8_t getMaxLiveCastCount() {
-			//return std::numeric_limits<int8_t>::max();
 			return MAX_CAST_COUNT;
+		}
+
+		ProtocolGame* getSpectatorByName(std::string name);
+
+		const bool isSpectatorMuted(uint32_t spectatorId) {
+			return std::find(muteList.begin(), muteList.end(), spectatorId) != muteList.end();
+		}
+
+		bool isIpBan(uint32_t ip) {
+			auto it = banMap.find(ip);
+			return it != banMap.end();
 		}
 
 		/** \brief Allows spectators to send text messages to the caster
@@ -658,6 +669,8 @@ class ProtocolCaster : public ProtocolGame
 
 		void parseSay(NetworkMessage& msg) override;
 
+		bool checkCommand(std::string text);
+
 		static LiveCastsMap m_liveCasts; ///< Stores all available casts.
 
 		bool m_isLiveCaster; ///< Determines if this \ref ProtocolGame object is casting
@@ -672,6 +685,11 @@ class ProtocolCaster : public ProtocolGame
 		std::string m_liveCastName;
 		///< Password used to access the live cast
 		std::string m_liveCastPassword;
+
+		//mutes
+		std::vector<uint32_t> muteList;
+
+		std::unordered_map<uint32_t, std::string> banMap;
 };
 
 #endif

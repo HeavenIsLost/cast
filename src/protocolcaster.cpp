@@ -39,8 +39,6 @@
 
 #include "creatureevent.h"
 
-#include "protocolspectator.h"
-
 extern Game g_game;
 extern ConfigManager g_config;
 extern Chat* g_chat;
@@ -123,6 +121,158 @@ void ProtocolCaster::parsePacket(NetworkMessage& msg)
 	ProtocolGame::parsePacket(msg);
 }
 
+bool ProtocolCaster::checkCommand(std::string text)
+{
+	if (text[0] == '/') {
+
+		StringVec t = explodeString(text.substr(1, text.length()), " ", 1);
+		if (t.size() > 0) {
+			toLowerCaseString(t[0]);
+
+			std::string command = t[0];
+
+			if ((command == "mute") || (command == "unmute")) {
+				if (t.size() == 2) {
+					toLowerCaseString(t[1]);
+					std::string toMute = t[1];
+
+					if (toMute == "") {
+						sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Not enough parameters."), false);
+						return true;
+					}
+
+					ProtocolSpectator* spectator = static_cast<ProtocolSpectator*>(getSpectatorByName(toMute));
+					if (spectator) {
+						if (command == "mute") {
+							sendChannelMessage("", spectator->getSpectatorName() + " has been muted.", SpeakClasses::TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
+
+							muteList.push_back(spectator->getSpectatorId());
+						} else {
+							sendChannelMessage("", spectator->getSpectatorName() + " has been unmuted.", SpeakClasses::TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
+
+							auto it = std::find(muteList.begin(), muteList.end(), spectator->getSpectatorId());
+							if (it != muteList.end()) {
+								muteList.erase(it);
+							}
+						}
+					}
+					else {
+						sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Spectator not found."), false);
+					}
+				} else {
+					sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Not enough parameters."), false);
+				}
+			} else if (command == "ban" || command == "unban") {
+				if (t.size() == 2) {
+
+					std::string toBan = t[1];
+					toLowerCaseString(toBan);
+
+					if (toBan == "") {
+						sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Not enough parameters."), false);
+						return true;
+					}
+
+					bool ban = true;
+
+					if (command == "unban") {
+						ban = false;
+					}
+
+					if (ban) {
+						ProtocolSpectator* spectator = static_cast<ProtocolSpectator*>(getSpectatorByName(toBan));
+						if (spectator) {
+							std::string name = spectator->getSpectatorName();
+
+							sendChannelMessage("", name + " has been banned.", SpeakClasses::TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
+							toLowerCaseString(name);
+
+							banMap.insert(std::make_pair(spectator->getIP(), name));
+
+							removeSpectator(spectator);
+							spectator->disconnect();
+						} else {
+							sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Spectator not found."), false);
+						}
+					} else {
+						bool found = false;
+						for (auto it : banMap) {
+							if (toBan == it.second) {
+								banMap.erase(it.first);
+								found = true;
+								break;
+							}
+						}
+
+						if (found) {
+							sendChannelMessage("",t[1] + " has been unbanned.", SpeakClasses::TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
+						} else {
+							sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Spectator not found."), false);
+						}
+					}
+				} else {
+					sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Not enough parameters."), false);
+				}
+			} else if (command == "spectators") {
+				std::stringstream ss;
+				if (getSpectatorCount() > 0) {
+					ss << "Spectators:" << '\n';
+					for (auto it : m_spectators) {
+						ss << static_cast<ProtocolSpectator*>(it)->getSpectatorName() << '\n';
+					}
+				} else {
+					ss << "No spectators." << '\n';
+				}
+
+				sendChannelMessage("", ss.str().c_str(), SpeakClasses::TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
+			} else if (command == "password") {
+				if (t.size() == 2) {
+
+					std::string newPassword = t[1];
+
+					if (newPassword == "") {
+						sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Not enough parameters."), false);
+						return true;
+					}
+
+					m_liveCastPassword = newPassword;
+
+					sendChannelMessage("", "Casting new password: " + newPassword, SpeakClasses::TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
+				} else {
+					sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Not enough parameters."), false);
+				}
+			} else if (command == "kick") {
+				if (t.size() == 2) {
+					toLowerCaseString(t[1]);
+					std::string toKick = t[1];
+
+					if (toKick == "") {
+						sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Not enough parameters."), false);
+						return true;
+					}
+
+					ProtocolSpectator* spectator = static_cast<ProtocolSpectator*>(getSpectatorByName(toKick));
+					if (spectator) {
+						sendChannelMessage("", spectator->getSpectatorName() + " has been kicked.", SpeakClasses::TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
+						removeSpectator(spectator);
+						spectator->disconnect();
+					} else {
+						sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Spectator not found."), false);
+					}
+				} else {
+					sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Not enough parameters."), false);
+				}
+			} else {
+				sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Invalid command."), false);
+			}
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
 void ProtocolCaster::parseSay(NetworkMessage& msg)
 {
 	std::string receiver;
@@ -152,7 +302,11 @@ void ProtocolCaster::parseSay(NetworkMessage& msg)
 	}
 
 	if (channelId == CHANNEL_CAST) {
-		g_dispatcher.addTask(createTask(std::bind(&ProtocolGame::sendChannelMessage, this, player->getName(), text, TALKTYPE_CHANNEL_R1, channelId)));
+		if (checkCommand(text)) {
+			return;
+		}
+
+		g_dispatcher.addTask(createTask(std::bind(&ProtocolGame::sendChannelMessage, this, player->getName(), text, TALKTYPE_CHANNEL_R1, channelId, true)));
 	} else {
 		addGameTask(&Game::playerSay, player->getID(), channelId, type, receiver, text);
 	}
@@ -174,6 +328,8 @@ bool ProtocolCaster::startLiveCast(const std::string& password /*= ""*/)
 		m_spectatorsCount = 0;
 
 		m_spectators.clear();
+		muteList.clear();
+		banMap.clear();
 
 		m_liveCastName = player->getName();
 		m_liveCastPassword = password;
@@ -206,6 +362,8 @@ bool ProtocolCaster::stopLiveCast()
 	}
 
 	m_spectators.clear();
+	muteList.clear();
+	banMap.clear();
 
 	if (player) {
 		unregisterLiveCast();
@@ -257,9 +415,10 @@ void ProtocolCaster::addSpectator(ProtocolGame* spectatorClient)
 	spectatorClient->addRef();
 
 	std::stringstream ss;
-	ss << "Spectator " << m_spectatorsCount;
+	ss << "Spectator(" << m_spectatorsCount << ")";
 
 	static_cast<ProtocolSpectator*>(spectatorClient)->setSpectatorName(ss.str().c_str());
+	static_cast<ProtocolSpectator*>(spectatorClient)->setSpectatorId(m_spectatorsCount);
 
 	updateLiveCastInfo();
 }
@@ -273,4 +432,20 @@ void ProtocolCaster::removeSpectator(ProtocolGame* spectatorClient)
 		spectatorClient->unRef();
 	}
 	updateLiveCastInfo();
+}
+
+ProtocolGame* ProtocolCaster::getSpectatorByName(std::string name)
+{
+	std::string tmpName = name;
+	toLowerCaseString(tmpName);
+
+	for (auto t : m_spectators) {
+		std::string tmp = static_cast<ProtocolSpectator*>(t)->getSpectatorName();
+		toLowerCaseString(tmp);
+		if (tmp == tmpName) {
+			return t;
+		}
+	}
+
+	return nullptr;
 }

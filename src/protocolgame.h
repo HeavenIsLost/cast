@@ -168,7 +168,7 @@ class ProtocolGame : public Protocol
 		void parseCloseChannel(NetworkMessage& msg);
 
 		//Send functions
-		void sendChannelMessage(const std::string& author, const std::string& text, SpeakClasses type, uint16_t channel);
+		void sendChannelMessage(const std::string& author, const std::string& text, SpeakClasses type, uint16_t channel, bool broadcast = true);
 		void sendChannelEvent(uint16_t channelId, const std::string& playerName, ChannelEvent_t channelEvent);
 		void sendClosePrivate(uint16_t channelId);
 		void sendCreatePrivateChannel(uint16_t channelId, const std::string& channelName);
@@ -199,7 +199,7 @@ class ProtocolGame : public Protocol
 		void sendCreatureOutfit(const Creature* creature, const Outfit_t& outfit);
 		void sendStats();
 		void sendBasicData();
-		void sendTextMessage(const TextMessage& message);
+		void sendTextMessage(const TextMessage& message, bool broadcast = true);
 		void sendReLoginWindow(uint8_t unfairFightReduction);
 
 		void sendTutorial(uint8_t tutorialId);
