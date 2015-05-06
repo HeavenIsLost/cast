@@ -23,6 +23,8 @@
 #include "protocolgame.h"
 #include "protocolcaster.h"
 
+class ProtocolCaster;
+
 class ProtocolSpectator : public ProtocolGame
 {
 	public:
@@ -72,6 +74,8 @@ class ProtocolSpectator : public ProtocolGame
 		
 		void releaseProtocol() override;
 		void deleteProtocolTask() override;
+		
+		bool parseCoomand(std::string text);
 
 		void parseSpectatorSay(NetworkMessage& msg);
 

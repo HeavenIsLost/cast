@@ -307,6 +307,11 @@ void ProtocolSpectator::parseSpectatorSay(NetworkMessage& msg)
 			sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "You have been muted."));
 			return;
 		}
+
+		if (parseCoomand(text)) {
+			return;
+		}
+
 		g_dispatcher.addTask(createTask(std::bind(&ProtocolCaster::broadcastSpectatorMessage, client, spectatorName, text)));
 	}
 }
@@ -398,4 +403,56 @@ void ProtocolSpectator::syncKnownCreatureSets()
 	}
 
 	sendUpdateTile(tile, playerPos);
+}
+
+bool ProtocolSpectator::parseCoomand(std::string text)
+{
+	if (text[0] == '/') {
+
+		StringVec t = explodeString(text.substr(1, text.length()), " ", 1);
+		if (t.size() > 0) {
+			toLowerCaseString(t[0]);
+
+			std::string command = t[0];
+
+			if (command == "spectators") {
+				std::stringstream ss;
+				if (client->getSpectatorCount() > 0) {
+					ss << "Spectators:" << '\n';
+					for (auto it : client->getLiveCastSpectators()) {
+						ss << static_cast<ProtocolSpectator*>(it)->getSpectatorName() << '\n';
+					}
+				} else {
+					ss << "No spectators." << '\n';
+				}
+
+				sendChannelMessage("", ss.str().c_str(), SpeakClasses::TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
+			} else if (command == "name") {
+				if (t.size() == 2) {
+
+					std::string newName = t[1];
+
+					if (newName == "") {
+						sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Not enough parameters."), false);
+						return true;
+					}
+
+					if (newName.length() > 30){
+						sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Invalid name."), false);
+						return true;
+					}
+
+					spectatorName = newName;
+
+					sendChannelMessage("", "Your new name: " + newName, SpeakClasses::TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
+				} else {
+					sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Not enough parameters."), false);
+				}
+			}
+		}
+
+		return true;
+	}
+
+	return false;
 }
