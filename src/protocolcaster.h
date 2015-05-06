@@ -669,6 +669,8 @@ class ProtocolCaster : public ProtocolGame
 
 		void parseSay(NetworkMessage& msg) override;
 
+		void parseCloseChannel(NetworkMessage& msg) override;
+
 		bool checkCommand(std::string text);
 
 		static LiveCastsMap m_liveCasts; ///< Stores all available casts.

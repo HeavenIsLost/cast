@@ -165,7 +165,7 @@ class ProtocolGame : public Protocol
 		void parseChannelExclude(NetworkMessage& msg);
 		void parseOpenChannel(NetworkMessage& msg);
 		void parseOpenPrivateChannel(NetworkMessage& msg);
-		void parseCloseChannel(NetworkMessage& msg);
+		virtual void parseCloseChannel(NetworkMessage& msg);
 
 		//Send functions
 		void sendChannelMessage(const std::string& author, const std::string& text, SpeakClasses type, uint16_t channel, bool broadcast = true);

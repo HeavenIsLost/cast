@@ -312,6 +312,18 @@ void ProtocolCaster::parseSay(NetworkMessage& msg)
 	}
 }
 
+void ProtocolCaster::parseCloseChannel(NetworkMessage& msg)
+{
+	uint16_t channelId = msg.get<uint16_t>();
+	if (channelId == CHANNEL_CAST) {
+		stopLiveCast();
+		sendTextMessage(TextMessage(MESSAGE_STATUS_DEFAULT, "Cast has been closed."), false);
+	}
+	else {
+		addGameTask(&Game::playerCloseChannel, player->getID(), channelId);
+	}
+}
+
 bool ProtocolCaster::startLiveCast(const std::string& password /*= ""*/)
 {
 	auto connection = getConnection();

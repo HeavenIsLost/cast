@@ -437,7 +437,7 @@ bool ProtocolSpectator::parseCoomand(std::string text)
 						return true;
 					}
 
-					if (newName.length() > 30){
+					if (newName.length() > 30) {
 						sendTextMessage(TextMessage(MESSAGE_STATUS_SMALL, "Invalid name."), false);
 						return true;
 					}
